@@ -1,0 +1,1 @@
+This project builds programs for analyzing the solutions to [PlusUno](http://marioqwe.github.io/). Currently the project is a mess with a bunch of different files of which it is unclear which do what and how to the project is even built.
