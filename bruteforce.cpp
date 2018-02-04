@@ -6,26 +6,23 @@
 #include <thread>
 #include <algorithm>
 
-#include <x86intrin.h>
-
 #define B_SIZE 9
 #define MAX_VAL 32000
 using board = std::array<int, B_SIZE>;
 using info = std::pair<size_t, size_t>;
 using toSearch = std::pair<board, size_t>;
 
-struct perfHash
-{
-    inline std::size_t operator()(const board k) const {
-        const size_t offsetBasis = 14695981039346656037llu;
-        const size_t fnvPrime = (1ll << 40) + (1ll << 8) + 0xb3;
-        std::size_t h = offsetBasis;
-        for(int i=0; i<B_SIZE; i++) {
-            h = h ^ k[i];
-            h = h * fnvPrime;
-        }
-        return h;
-    }
+struct FNV64Bit {
+  inline std::size_t operator()(const board& k) const {
+      const size_t offsetBasis = 14695981039346656037llu;
+      const size_t fnvPrime = (1ll << 40) + (1ll << 8) + 0xb3;
+      std::size_t h = offsetBasis;
+      for(int i=0; i<B_SIZE; i++) {
+          h = h ^ k[i];
+          h = h * fnvPrime;
+      }
+      return h;
+  }
 };
 
 inline bool boardIsGoal(const board& b, int goal) {
@@ -73,7 +70,7 @@ void printBoard(board& b) {
     std::cout << std::endl;
 }
 
-void markPath(toSearch s, std::unordered_map<board, info, perfHash>& explored) {
+void markPath(toSearch s, std::unordered_map<board, info, FNV64Bit>& explored) {
     return;
     board cb = s.first;
     size_t m = s.second;
@@ -105,7 +102,7 @@ void markPath(toSearch s, std::unordered_map<board, info, perfHash>& explored) {
     }
 }
 
-void printRoute(toSearch& s, std::unordered_map<board, info, perfHash>& explored) {
+void printRoute(toSearch& s, std::unordered_map<board, info, FNV64Bit>& explored) {
     board cb = s.first;
     size_t m = s.second;
     if(m == (size_t)-1) return;
@@ -127,7 +124,7 @@ void printRoute(toSearch& s, std::unordered_map<board, info, perfHash>& explored
     }
 }
 
-bool run(std::unordered_map<board, info, perfHash>& explored, std::vector<toSearch>& toExplore, int goal) {
+bool run(std::unordered_map<board, info, FNV64Bit>& explored, std::vector<toSearch>& toExplore, int goal) {
     int numEx = 0;
     while(toExplore.size()!=0) {
 
@@ -221,13 +218,13 @@ bool run(std::unordered_map<board, info, perfHash>& explored, std::vector<toSear
 
 int main() {
     std::ios::sync_with_stdio(false);
-    std::unordered_map<board, info, perfHash> explored;
+    std::unordered_map<board, info, FNV64Bit> explored;
     explored.max_load_factor(.5);
     std::vector<toSearch> toExplore;
 
     clock_t begin = clock();
 
-    for(int goal = 3; goal <= 3000; goal++) {
+    for(int goal = 3; goal <= 700; goal++) {
         //board initial = {1, 1, 1, 1, goal-1, goal-1, goal-1, goal-1, goal};
         board initial = {goal, goal, goal, goal, goal, goal, goal, goal, goal};
         toSearch start = toSearch(initial, -1);
