@@ -26,7 +26,7 @@ struct FNV64Bit {
 };
 
 inline bool boardIsGoal(const Board& b, int goal) {
-    //if(b[0] > 1) return false;
+    if(b[0] > 1 && b[0] != goal) return false;
     for(int i=1; i<B_SIZE; i++) {
         if(b[i] != goal) return false;
     }
@@ -35,11 +35,11 @@ inline bool boardIsGoal(const Board& b, int goal) {
 
 inline bool boardIsCand(const Board& b) {
     if(b[1] < 1) return false;
-/*    if(b[6] == 1) {
+    if(b[6] == 1) {
         int n = b[7];
         int y = b[8];
         return ((n*(n-1))/2 + 1) == y;
-    }*/
+    }
     return true;
 }
 
@@ -63,9 +63,9 @@ inline void sort(Board& b, int index_1, int index_2, int val) {
     b.at(s) = val;
 }
 
-void printBoard(Board& b) {
+void printBoard(Board& board) {
     for(int i=0; i<9; i++) {
-        std::cout << b[i] << " ";
+        std::cout << board[i] << " ";
     }
     std::cout << std::endl;
 }
