@@ -47,19 +47,23 @@ inline bool boardIsCand(const board& b) {
 }
 
 
-inline void sort(board& b, int i, int j, int v) {
-    // Decrement lowest board spot with val i
-    while(i > 0 && b.at(i-1) == b.at(i)) i--;
-    b.at(i)--;
+inline void singleSort(board& b, int i, int j, int val) {
 
-    // Move all spots v < b[k] < b[j] up one
-    // Set first spot to v
+}
+
+inline void sort(board& b, int index_1, int index_2, int val) {
+    // Decrement lowest board spot with val i
+    while(index_1 > 0 && b.at(index_1-1) == b.at(index_1)) index_1--;
+    b.at(index_1)--;
+
+    // Move all spots val < b[k] < b[index_2] up one
+    // Set first spot to val
     int s=0;
-    while(s < 9 && b[s] < v) s++;
-    for(int id=j; id!=s; id--) {
+    while(s < 9 && b[s] < val) s++;
+    for(int id=index_2; id!=s; id--) {
         b.at(id) = b.at(id-1);
     }
-    b.at(s) = v;
+    b.at(s) = val;
 }
 
 void printBoard(board& b) {
@@ -224,7 +228,8 @@ int main() {
     clock_t begin = clock();
 
     for(int goal = 3; goal <= 3000; goal++) {
-        board initial = {1, 1, 1, 1, goal-1, goal-1, goal-1, goal-1, goal};
+        //board initial = {1, 1, 1, 1, goal-1, goal-1, goal-1, goal-1, goal};
+        board initial = {goal, goal, goal, goal, goal, goal, goal, goal, goal};
         toSearch start = toSearch(initial, -1);
         explored.clear();
         toExplore.clear();
