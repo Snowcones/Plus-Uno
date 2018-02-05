@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#define KMAX_VAL 32000
+#define KMAX_VAL 64000
 
 using Move = std::pair<int, int>;
 using Info = std::pair<Move, size_t>;
@@ -35,7 +35,7 @@ void markPath(SearchNode s,
   if (explored.count(current_board) == 0)
     return;
   Info &storedRes = explored[current_board];
-  if (storedRes.second != -1) {
+  if (storedRes.second != (size_t)-1) {
     Info &storedRes = explored[current_board];
     //        std::cout << "Starting mark path" << std::endl;
     //        std::cout << "On: ";
@@ -99,7 +99,7 @@ bool run(std::unordered_map<Board, Info, FNV64Bit> &explored,
     toExplore.pop_back();
 
     if (explored.count(curr) != 0) {
-      if (explored[curr].second == -1) {
+      if (explored[curr].second == (size_t)-1) {
         std::cout << "Early exit" << std::endl;
         // std::cout << "At ";
         // printBoard(curr);
@@ -109,7 +109,7 @@ bool run(std::unordered_map<Board, Info, FNV64Bit> &explored,
         return true;
       } else {
         //std::cout << "Search collision?" << std::endl;
-        if (explored[curr].second == goal)
+        if (explored[curr].second == (size_t)goal)
           continue;
       }
     }
@@ -192,7 +192,7 @@ int main() {
 
   clock_t begin = clock();
 
-  for (int goal = 3; goal <= 700; goal++) {
+  for (int goal = 20000; goal <= 20000; goal++) {
     Board initial({1, goal - 1, goal, goal, goal, goal, goal, goal, goal});
     SearchNode start = SearchNode(initial, {-1, -1});
     explored.clear();
