@@ -10,8 +10,9 @@
 
 #define KMAX_VAL 32000
 
-using Info = std::pair<size_t, size_t>;
-using SearchNode = std::pair<Board, size_t>;
+using Move = std::pair<int, int>;
+using Info = std::pair<Move, size_t>;
+using SearchNode = std::pair<Board, Move>;
 
 struct FNV64Bit {
   inline std::size_t operator()(const Board &k) const {
@@ -30,7 +31,7 @@ void markPath(SearchNode s,
               std::unordered_map<Board, Info, FNV64Bit> &explored) {
   return;
   Board current_board = s.first;
-  size_t m = s.second;
+  Move m = s.second;
   if (explored.count(current_board) == 0)
     return;
   Info &storedRes = explored[current_board];
@@ -42,17 +43,17 @@ void markPath(SearchNode s,
     //        std::cout << "With second: " << storedRes.second << std::endl;
 
     storedRes.second = -1;
-    if (m == (size_t)-1)
+    if (m == Move(-1, -1))
       return;
 
-    size_t i = m % KMAX_VAL;
-    size_t j = m / KMAX_VAL;
+    int i = m.first;
+    int j = m.second;
 
     current_board[j] = current_board[i] + current_board[j];
     current_board[i] += 1;
 
     current_board.sort();
-    size_t next_move = storedRes.first;
+    Move next_move = storedRes.first;
     SearchNode next_node = SearchNode(current_board, next_move);
     markPath(next_node, explored);
     return;
@@ -64,8 +65,8 @@ void markPath(SearchNode s,
 void printRoute(SearchNode &s,
                 const std::unordered_map<Board, Info, FNV64Bit> &explored) {
   Board current_board = s.first;
-  size_t packed_move = s.second;
-  if (packed_move == (size_t)-1) {
+  Move packed_move = s.second;
+  if (packed_move == Move(-1, -1)) {
     std::cout << "Board at: ";
     current_board.print();
     return;
@@ -73,13 +74,13 @@ void printRoute(SearchNode &s,
     std::cout << "Board at: ";
     current_board.print();
 
-    size_t i = packed_move % KMAX_VAL;
-    size_t j = packed_move / KMAX_VAL;
+    size_t i = packed_move.first;
+    size_t j = packed_move.second;
 
     current_board[j] = current_board[i] + current_board[j];
     current_board[i] += 1;
     current_board.sort();
-    size_t next_move = explored.at(current_board).first;
+    Move next_move = explored.at(current_board).first;
 
     SearchNode nextToPrint = SearchNode(current_board, next_move);
     printRoute(nextToPrint, explored);
@@ -94,7 +95,7 @@ bool run(std::unordered_map<Board, Info, FNV64Bit> &explored,
 
     SearchNode edge = toExplore.back();
     Board curr = edge.first;
-    size_t m = edge.second;
+    Move m = edge.second;
     toExplore.pop_back();
 
     if (explored.count(curr) != 0) {
@@ -124,14 +125,19 @@ bool run(std::unordered_map<Board, Info, FNV64Bit> &explored,
 
     if (numEx % 100000 == 0) {
       std::cout << "Explored: " << numEx << std::endl;
+      std::cout << "ToExplore size: " << toExplore.size() << std::endl;
+      std::cout << "Explored size: " << explored.size() << std::endl;
     }
 
     for (int i = 0; i < KBOARD_SIZE; i++) {
-      while(curr[i] == 0) {
-        ++i;
-      }
+      if(curr[i] == 0) continue;
+      if (i > 0 && curr[i - 1] == curr[i])
+        continue;
 
       for (int j = i + 1; j < KBOARD_SIZE; j++) {
+        if (j > i + 1) {
+          if (curr[j] == curr[j-1]) continue;
+        }
         if (curr[i] == 1 && curr[j] == 2) {
           assert(curr.is_sorted());
 
@@ -139,15 +145,18 @@ bool run(std::unordered_map<Board, Info, FNV64Bit> &explored,
           int first_index_2;
           int second_index_1;
           int second_index_2;
-          std::pair<Board, Board> undone_boards = curr.undo_one_two_case(&first_index_1, &first_index_2, &second_index_1, &second_index_2, i, j);
-          Board& zero_one_board = undone_boards.first;
-          Board& zero_two_board = undone_boards.second;
-          size_t first_packed_move = first_index_1 + first_index_2 * KMAX_VAL;
-          size_t second_packed_move =
-              second_index_1 + second_index_2 * KMAX_VAL;
+          std::pair<Board, Board> undone_boards =
+              curr.undo_one_two_case(&first_index_1, &first_index_2,
+                                     &second_index_1, &second_index_2, i, j);
+          Board &zero_one_board = undone_boards.first;
+          Board &zero_two_board = undone_boards.second;
+          Move first_move(first_index_1, first_index_2);
+          Move second_move(second_index_1, second_index_2);
 
-          SearchNode zero_one_node = SearchNode(undone_boards.first, first_packed_move);
-          SearchNode zero_two_node = SearchNode(undone_boards.second, second_packed_move);
+          SearchNode zero_one_node =
+              SearchNode(undone_boards.first, first_move);
+          SearchNode zero_two_node =
+              SearchNode(undone_boards.second, second_move);
 
           if (zero_one_board.is_valid_position()) {
             toExplore.push_back(zero_one_node);
@@ -161,9 +170,9 @@ bool run(std::unordered_map<Board, Info, FNV64Bit> &explored,
           int undone_index_1;
           int undone_index_2;
           Board undone = curr.undo_move(&undone_index_1, &undone_index_2, i, j);
-          size_t packed_move = undone_index_1 + undone_index_2 * KMAX_VAL;
+          Move move(undone_index_1, undone_index_2);
 
-          SearchNode smallSearch = SearchNode(undone, packed_move);
+          SearchNode smallSearch = SearchNode(undone, move);
           if (undone.is_valid_position())
             toExplore.push_back(smallSearch);
         }
@@ -185,7 +194,7 @@ int main() {
 
   for (int goal = 3; goal <= 700; goal++) {
     Board initial({1, goal - 1, goal, goal, goal, goal, goal, goal, goal});
-    SearchNode start = SearchNode(initial, -1);
+    SearchNode start = SearchNode(initial, {-1, -1});
     explored.clear();
     toExplore.clear();
     toExplore.push_back(start);

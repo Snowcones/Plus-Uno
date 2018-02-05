@@ -8,6 +8,8 @@ release: all
 debug: CXXFLAGS += -g3 -DDEBUG
 debug: all
 
+profile: CXXFLAGS += -g -Ofast -DNDEBUG -flto
+
 all: board.o
 	$(CXX) $(CXXFLAGS) bruteforce.cpp -o bruteforce board.o
 

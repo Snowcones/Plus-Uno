@@ -72,15 +72,28 @@ int Board::find_last(int val) const {
   return index;
 }
 
+namespace {
+bool assert_move_works(int i1, int i2, const Board& undone, const Board& board) {
+  Board temp = undone;
+  temp[i2] = temp[i1] + temp[i2];
+  temp[i1] += 1;
+  temp.sort();
+  assert(temp == board);
+}
+}
+
 Board Board::undo(int* new_i1, int* new_i2, int i1, int i2) const {
+  assert(i1==0 || values[i1] > values[i1-1]);
+  assert((values[i1] == values[i2]) || (values[i2] > values[i2-1]));
   Board undone = *this;
-  int v1 = (*this)[i1];
-  int v2 = (*this)[i2];
+  int v1 = values[i1];
+  int v2 = values[i2];
   int new_v1 = v1-1;
   int new_v2 = v2-v1+1;
   undone[i1] = new_v1;
   undone[i2] = new_v2;
   undone.sort();
+
   *new_i1 = undone.find_first(new_v1);
   *new_i2 = undone.find_last(new_v2);
   return undone;
